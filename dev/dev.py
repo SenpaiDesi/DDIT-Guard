@@ -1,3 +1,4 @@
+import asyncio
 import discord
 from discord.ext import commands
 import aiosqlite
@@ -14,7 +15,39 @@ class dev(commands.Cog):
         db_conn = await aiosqlite.connect(db)
         msg = await ctx.send(task_list.format("1"))
         try:
-            await db_conn.execute("CREATE TABLE IF NOT EXIST moderationlogs(logid INTEGER PRIMARY KEY, guildid int, moderationlogtype int, userid int, moduserid int)")
+            await db_conn.execute("CREATE TABLE IF NOT EXIST moderationlogs(logid INTEGER PRIMARY KEY, guildid int, moderationlogtype int, userid int, moduserid int, content varchar, duration int, raw_time text)")
+            await db_conn.commit()
+        except Exception as e:
+            return await msg.edit(content=f"Failed to complete task 1/3 Because of {e}")
+        await asyncio.sleep(2)
+        await msg.edit(content = task_list.format("2"))
+        try:
+            await db_conn.execute("CREATE TABLE IF NOT EXISTS logtypes (ID INTEGER PRIMARY KEY, type TEXT")
+            await db_conn.commit()
+        except Exception as e:
+            return await msg.edit(content = f"Failed to complete task 2/3 because of {e}")
+        await asyncio.sleep(2)
+        await msg.edit(content = task_list.format("3"))
+        try:
+            await db_conn.execute("INSERT OR IGNORE INTO logtypes VALUES (?, ?)", (1, "warn",))
+            await db_conn.execute("INSERT OR IGNORE INTO logtypes VALUES (?, ?)", (2, "mute",))
+            await db_conn.execute("INSERT OR IGNORE INTO logtypes VALUES (?, ?)", (3, "unmute",))
+            await db_conn.execute("INSERT OR IGNORE INTO logtypes VALUES (?, ?)", (4, "kick",))
+            await db_conn.execute("INSERT OR IGNORE INTO logtypes VALUES (?, ?)", (5, "softban",))
+            await db_conn.execute("INSERT OR IGNORE INTO logtypes VALUES (?, ?)", (6, "ban",))
+            await db_conn.execute("INSERT OR IGNORE INTO logtypes VALUES (?, ?)", (7, "unban",))
+            await db_conn.commit()
+        except Exception as e:
+            return await msg.edit(content = f"Failed to complete task 3/3 because of {e}")
+        await asyncio.sleep(2)
+        await msg.edit(content = "Done")
+
+        try:
+            await db_conn.close()
+        except ValueError:
+            pass
+        except Exception as e:
+            return await msg.edit(content=f"Failed to close the database because of {e}")
 
 
 
