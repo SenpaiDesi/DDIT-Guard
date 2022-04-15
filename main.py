@@ -15,6 +15,7 @@ start_date_pretty = start_date.strftime("%d/%m/%Y %H:%M:%S")
 
 dev_mode = False
 parser = argparse.ArgumentParser(description="Run the bot in dev mode.")
+parser.add_argument("--dev", action="store_true")
 args = parser.parse_args()
 
 intents = discord.Intents.default()
@@ -24,6 +25,7 @@ intents.messages = True
 
 if args.dev:
     dev_mode = True
+
 print(f"Bot started on {start_date_pretty}\n")
 
 nerd = commands.Bot(command_prefix="dd!", case_insensitve = True, intents = intents)
@@ -35,7 +37,7 @@ print("Setting status\n")
 status = cycle(assets.status_cycle)
 
 if __name__ == "__main__":
-    for extension in tqdm(assets.extensions, desc = "Loading extensions", unit="Ex"):
+    for extension in assets.extensions:
         nerd.load_extension(extension)
 
 
@@ -53,5 +55,12 @@ async def on_ready():
 
 
 token = utilities.get_json(assets.config_file)
-run_token = token["token"]
-nerd.run(run_token)
+
+if dev_mode:
+    run_token = token["dev_token"]
+    nerd.run(run_token)
+else:
+    run_token = token["token"]
+    nerd.run(run_token)
+
+

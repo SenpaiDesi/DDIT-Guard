@@ -23,7 +23,7 @@ class Help(commands.Cog):
     async def help (self, ctx, *input):
         """Shows a beutifull help command. """
         prefix = ctx.prefix
-        version = "0.8.2"
+        version = "0.0.1"
 
         if not input:
             emb = discord.Embed(title ="Commands and modules", color = discord.Color.random(), description= f"Use {ctx.prefix}help <module> to gain more information about that module.")
@@ -41,7 +41,7 @@ class Help(commands.Cog):
             if commands_desc:
                 emb.add_field(name='Not belonging to a module', value=commands_desc, inline=False)
 
-            emb.add_field(name = "About", value=f"This bot is currenly being developed by Naigel#0001 and Senpai_Desi#4108.")
+            emb.add_field(name = "About", value=f"This bot is currenly being developed by Senpai_Desi#4108.")
             emb.set_footer(text = f"Running {version}.")
 
         elif len(input) == 1:
