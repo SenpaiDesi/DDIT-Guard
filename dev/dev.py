@@ -1,81 +1,70 @@
-import asyncio
 import discord
-from discord.ext import commands
 import aiosqlite
-db = "./database.db"
-task_list = "Running task {}/3"
+import sqlite3
+from discord.ext import commands 
+import asyncio
+import re 
 
-class dev(commands.Cog):
+
+
+
+
+class admins(commands.Cog):
+    """Bot dev only commands"""
     def __init__(self, bot):
         self.bot = bot
     
-    @commands.command(name="dbsetup")
+
+    @commands.command(name='setup')
     @commands.is_owner()
     async def dbsetup(self, ctx):
-        db_conn = await aiosqlite.connect(db)
-        msg = await ctx.send(task_list.format("1"))
-        try:
-            await db_conn.execute("CREATE TABLE IF NOT EXISTS moderationlogs(logid INTEGER PRIMARY KEY, guildid int, moderationlogtype int, userid int, moduserid int, content varchar, duration int, raw_time text)")
-            await db_conn.commit()
-        except Exception as e:
-            return await msg.edit(content=f"Failed to complete task 1/3 Because of: `{e}`")
+        """Db setup and init."""
+        db = await aiosqlite.connect("./database.db")
+        msg = await ctx.send("Initialising....")
         await asyncio.sleep(2)
-        await msg.edit(content = task_list.format("2"))
+        await msg.edit(content = "Setting up log db (task 1/3)")
         try:
-            await db_conn.execute("CREATE TABLE IF NOT EXISTS logtypes (ID INTEGER PRIMARY KEY, type TEXT)")
-            await db_conn.commit()
+           await db.execute("CREATE TABLE IF NOT EXISTS moderationLogs (logid INTEGER PRIMARY KEY, guildid int, moderationLogTypes int, userid int, moduserid int, content varchar, duration VARCHAR)")
+           await db.commit()
         except Exception as e:
-            return await msg.edit(content = f"Failed to complete task 2/3 because of: `{e}`")
+            return msg.edit(content = f"FAILED TASK 1/3 because of \n{e}")
         await asyncio.sleep(2)
-        await msg.edit(content = task_list.format("3"))
+        await msg.edit(content = "Creating log type converter (task 2/3)")
         try:
-            await db_conn.execute("INSERT OR IGNORE INTO logtypes VALUES (?, ?)", (1, "warn",))
-            await db_conn.execute("INSERT OR IGNORE INTO logtypes VALUES (?, ?)", (2, "mute",))
-            await db_conn.execute("INSERT OR IGNORE INTO logtypes VALUES (?, ?)", (3, "unmute",))
-            await db_conn.execute("INSERT OR IGNORE INTO logtypes VALUES (?, ?)", (4, "kick",))
-            await db_conn.execute("INSERT OR IGNORE INTO logtypes VALUES (?, ?)", (5, "softban",))
-            await db_conn.execute("INSERT OR IGNORE INTO logtypes VALUES (?, ?)", (6, "ban",))
-            await db_conn.execute("INSERT OR IGNORE INTO logtypes VALUES (?, ?)", (7, "unban",))
-            await db_conn.commit()
+            await db.execute("CREATE TABLE IF NOT EXISTS logtypes (Type INTEGER PRIMARY KEY, Form TEXT)")
+            await db.commit()
         except Exception as e:
-            return await msg.edit(content = f"Failed to complete task 3/3 because of: `{e}`")
+            return await msg.edit(content  = f"FAILED TASK 2/3 because of \n{e}")
         await asyncio.sleep(2)
-        await msg.edit(content = "Done")
-
+        await msg.edit(content  = "Inserting default logtype converter (task 3/3)")
         try:
-            await db_conn.close()
+            await db.execute("INSERT OR IGNORE INTO logtypes VALUES (?, ?)", (1, "warn",))
+            await db.execute("INSERT OR IGNORE INTO logtypes VALUES (?, ?)", (2, "mute",))
+            await db.execute("INSERT OR IGNORE INTO logtypes VALUES (?, ?)", (3, "unmute",))
+            await db.execute("INSERT OR IGNORE INTO logtypes VALUES (?, ?)", (4, "kick",))
+            await db.execute("INSERT OR IGNORE INTO logtypes VALUES (?, ?)", (5, "softban",))
+            await db.execute("INSERT OR IGNORE INTO logtypes VALUES (?, ?)", (6, "ban",))
+            await db.execute("INSERT OR IGNORE INTO logtypes VALUES (?, ?)", (7, "unban",))
+            await db.commit()
+        except Exception as e:
+            return await msg.edit(content = f"FAILED TASK 3/3 because of \n{e}")
+        await asyncio.sleep(2)
+        await msg.edit(content = f"Closing database")
+        try:
+            await db.close()
         except ValueError:
             pass
         except Exception as e:
-            return await msg.edit(content=f"Failed to close the database because of {e}")
+            return await msg.edit(content = f"Failed to close db because of \n{e}")
+        await asyncio.sleep(2)
+        await msg.edit(content =  "Done!")
 
-    @commands.command(name="load")
-    @commands.is_owner()
-    async def load(self, ctx, *, extension, hidden=True):
-        try:
-            await self.bot.load_extension(extension)
-        except Exception as e:
-            return await ctx.send(f"{type(e).__name__} - {e}")
+        
     
-    @commands.command(name="unload")
-    @commands.is_owner()
-    async def unload (self, ctx, module):
-        try:
-            await self.bot.unload_extension(module)
-        except Exception as e:
-            return await ctx.send(f"{type(e).__name__} - {e}")
-    
-    @commands.command(name="reload")
-    @commands.is_owner()
-    async def _reload(self, ctx, module):
-        try:
-            await self.bot.unload_extension(module)
-            await self.bot.load_extension(module)
-        except Exception as e:
-            return await ctx.send(f"{type(e).__name__} - {e}")
 
 
-    
+
+
 
 
 
@@ -83,4 +72,4 @@ class dev(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(dev(bot))
+    bot.add_cog(admins(bot))
